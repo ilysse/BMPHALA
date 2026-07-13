@@ -1,0 +1,7 @@
+# Copy this file to `frontend/android/key.properties` and fill in real values.
+# Keep the real `key.properties` and keystore out of version control.
+
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=YOUR_KEY_ALIAS
+storeFile=app/upload-keystore.jks

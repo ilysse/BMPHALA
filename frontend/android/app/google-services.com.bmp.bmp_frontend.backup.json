@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978770721198",
+    "project_id": "halawatapp",
+    "storage_bucket": "halawatapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978770721198:android:19737651ea727e06a3303f",
+        "android_client_info": {
+          "package_name": "com.bmp.bmp_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdAD4nSgn7R6AOZMX1pa8ZsMiddX7WOrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
