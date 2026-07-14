@@ -395,6 +395,50 @@ class BmpTest extends TestCase
             ->assertJsonStructure(['data' => ['access_token', 'refresh_token']]);
     }
 
+    public function test_admin_can_list_and_reject_pending_registrations(): void
+    {
+        $pendingA = $this->createUser($this->companyA, 'pending-a@example.com', 'retailer');
+        $pendingA->forceFill([
+            'name' => 'Pending Shop A',
+            'status' => 'pending',
+            'metadata' => ['phone' => '+212611111111'],
+        ])->save();
+
+        $pendingB = $this->createUser($this->companyB, 'pending-b@example.com', 'retailer');
+        $pendingB->forceFill(['status' => 'pending'])->save();
+
+        $this->getJson('/api/v1/users/registrations/pending', $this->authHeader($this->retailerA))
+            ->assertForbidden();
+
+        $this->getJson('/api/v1/users/registrations/pending?search=Pending%20Shop', $this->authHeader($this->adminA))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.id', $pendingA->id)
+            ->assertJsonPath('data.0.status', 'pending')
+            ->assertJsonMissing(['id' => $pendingB->id]);
+
+        $this->putJson("/api/v1/users/{$pendingA->id}/reject", [
+            'reason' => 'Shop information could not be verified.',
+        ], $this->authHeader($this->adminB))->assertNotFound();
+
+        $this->putJson("/api/v1/users/{$pendingA->id}/reject", [
+            'reason' => 'Shop information could not be verified.',
+        ], $this->authHeader($this->adminA))
+            ->assertOk()
+            ->assertJsonPath('data.status', 'inactive');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'company_id' => $this->companyA->id,
+            'user_id' => $this->adminA->id,
+            'event' => 'user.rejected',
+            'auditable_id' => $pendingA->id,
+        ]);
+
+        $this->getJson('/api/v1/users/registrations/pending', $this->authHeader($this->adminA))
+            ->assertOk()
+            ->assertJsonPath('meta.total', 0);
+    }
+
     public function test_registration_accepts_email_phone_or_both(): void
     {
         $emailOnly = $this->postJson('/api/v1/auth/register', [

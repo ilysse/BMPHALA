@@ -195,7 +195,7 @@ class _DashboardViewState extends State<DashboardView> {
                 icon: Icons.storefront,
                 subtitle: context.tr('onboard_shop'),
                 onTap: () =>
-                    widget.onTabSelected?.call(6), // Switch to Onboard Shop
+                    widget.onTabSelected?.call(7), // Switch to Onboard Shop
               ),
             ),
           ],

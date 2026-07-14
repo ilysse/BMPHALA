@@ -286,6 +286,26 @@ class LanguageProvider extends ChangeNotifier {
       'approve_account': 'Approve',
       'account_approved': 'Account approved successfully.',
       'approval_failed': 'Account approval failed',
+      'registrations': 'Registrations',
+      'pending_registrations': 'Pending registrations',
+      'registration_review_help':
+          'Review new retailer accounts before they can sign in.',
+      'search_registrations': 'Search by shop, email, phone, or address',
+      'no_pending_registrations': 'No registrations waiting',
+      'no_pending_registrations_help':
+          'New retailer applications will appear here for your approval.',
+      'approve_registration': 'Approve registration',
+      'approve_registration_confirm':
+          'Approve {name} and allow this account to sign in?',
+      'reject_registration': 'Reject registration',
+      'reject_registration_confirm':
+          'Reject {name}? The account will remain inactive.',
+      'rejection_reason': 'Reason (optional)',
+      'rejection_reason_hint': 'Add a note for the audit log',
+      'registration_rejected': 'Registration rejected.',
+      'rejection_failed': 'Registration rejection failed',
+      'submitted': 'Submitted',
+      'referred_by': 'Referred by',
       // Reports
       'filters': 'Filters',
       'date_from': 'From',
@@ -697,6 +717,26 @@ class LanguageProvider extends ChangeNotifier {
       'approve_account': 'موافقة',
       'account_approved': 'تمت الموافقة على الحساب بنجاح.',
       'approval_failed': 'فشلت الموافقة على الحساب',
+      'registrations': 'طلبات التسجيل',
+      'pending_registrations': 'طلبات التسجيل المعلقة',
+      'registration_review_help':
+          'راجع حسابات التجار الجدد قبل السماح لهم بتسجيل الدخول.',
+      'search_registrations': 'ابحث بالمتجر أو البريد أو الهاتف أو العنوان',
+      'no_pending_registrations': 'لا توجد طلبات في الانتظار',
+      'no_pending_registrations_help':
+          'ستظهر طلبات التجار الجديدة هنا للموافقة عليها.',
+      'approve_registration': 'الموافقة على التسجيل',
+      'approve_registration_confirm':
+          'هل تريد الموافقة على {name} والسماح لهذا الحساب بالدخول؟',
+      'reject_registration': 'رفض التسجيل',
+      'reject_registration_confirm':
+          'هل تريد رفض {name}؟ سيبقى الحساب غير نشط.',
+      'rejection_reason': 'السبب (اختياري)',
+      'rejection_reason_hint': 'أضف ملاحظة إلى سجل التدقيق',
+      'registration_rejected': 'تم رفض طلب التسجيل.',
+      'rejection_failed': 'فشل رفض طلب التسجيل',
+      'submitted': 'تاريخ الطلب',
+      'referred_by': 'تمت الإحالة بواسطة',
       // Reports
       'filters': 'تصفية',
       'date_from': 'من',

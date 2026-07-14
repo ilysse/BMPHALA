@@ -10,6 +10,7 @@ import 'dashboard_view.dart';
 import 'admin_reports_view.dart';
 import 'admin_orders_view.dart';
 import 'admin_crm_view.dart';
+import 'admin_registrations_view.dart';
 import 'dispatch_map_view.dart';
 import 'sales_rep_performance_view.dart';
 import 'admin_catalog_view.dart';
@@ -51,6 +52,10 @@ class _AdminMainViewState extends State<AdminMainView> {
       _NavItem(icon: Icons.pie_chart_rounded, label: 'Metrics'),
       _NavItem(icon: Icons.query_stats_rounded, label: context.tr('reports')),
       _NavItem(icon: Icons.assignment_rounded, label: context.tr('orders')),
+      _NavItem(
+        icon: Icons.how_to_reg_rounded,
+        label: context.tr('registrations'),
+      ),
       _NavItem(icon: Icons.groups_rounded, label: context.tr('crm')),
       _NavItem(icon: Icons.map_rounded, label: context.tr('dispatch')),
       _NavItem(
@@ -87,6 +92,7 @@ class _AdminMainViewState extends State<AdminMainView> {
       const AdminMetricsView(),
       const AdminReportsView(),
       const AdminOrdersView(),
+      const AdminRegistrationsView(),
       const AdminCrmView(),
       const DispatchMapView(),
       const _AdminOnboardRetailerTab(),
@@ -124,7 +130,7 @@ class _AdminMainViewState extends State<AdminMainView> {
             IconButton(
               icon: const Icon(Icons.notifications_outlined),
               onPressed: () {
-                _selectIndex(12);
+                _selectIndex(13);
               },
             ),
             IconButton(
@@ -221,7 +227,7 @@ class _AdminMainViewState extends State<AdminMainView> {
                       ),
                     ),
                     ...navItems
-                        .sublist(0, 7)
+                        .sublist(0, 8)
                         .asMap()
                         .entries
                         .map(
@@ -241,12 +247,12 @@ class _AdminMainViewState extends State<AdminMainView> {
                       ),
                     ),
                     ...navItems
-                        .sublist(7, 11)
+                        .sublist(8, 12)
                         .asMap()
                         .entries
                         .map(
                           (entry) =>
-                              _buildDrawerItem(entry.key + 7, entry.value),
+                              _buildDrawerItem(entry.key + 8, entry.value),
                         ),
                     const Divider(height: 1),
                     Padding(
@@ -262,12 +268,12 @@ class _AdminMainViewState extends State<AdminMainView> {
                       ),
                     ),
                     ...navItems
-                        .sublist(11)
+                        .sublist(12)
                         .asMap()
                         .entries
                         .map(
                           (entry) =>
-                              _buildDrawerItem(entry.key + 11, entry.value),
+                              _buildDrawerItem(entry.key + 12, entry.value),
                         ),
                   ],
                 ),

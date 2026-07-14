@@ -73,8 +73,10 @@ Route::middleware('jwt.auth')->group(function () {
     Route::put('/company', [CompanyController::class, 'update']);
 
       // User Management
+      Route::get('/users/registrations/pending', [UserController::class, 'pendingRegistrations']);
       Route::put('/users/{id}/password', [UserController::class, 'updatePassword']);
       Route::put('/users/{id}/approve', [UserController::class, 'approve']);
+      Route::put('/users/{id}/reject', [UserController::class, 'reject']);
       Route::put('/users/{id}/cash-collection', [UserController::class, 'updateCashCollection']);
       Route::put('/users/{id}/representative-features', [UserController::class, 'updateRepresentativeFeatures']);
       Route::apiResource('users', UserController::class);

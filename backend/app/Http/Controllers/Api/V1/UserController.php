@@ -267,6 +267,43 @@ class UserController extends Controller
         ]);
     }
 
+    public function pendingRegistrations(Request $request)
+    {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Only admins can review registrations.');
+
+        $query = User::withoutGlobalScopes()
+            ->where('company_id', auth()->user()->company_id)
+            ->where('role', 'retailer')
+            ->where('status', 'pending')
+            ->latest();
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('metadata', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = max(1, min($request->integer('per_page', 25), 100));
+        $users = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pending registrations retrieved.',
+            'data' => UserResource::collection($users->items()),
+            'meta' => [
+                'page' => $users->currentPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'last_page' => $users->lastPage(),
+            ],
+            'errors' => null,
+        ]);
+    }
+
     public function approve(Request $request, string $id)
     {
         abort_unless(auth()->user()?->role === 'admin', 403, 'Only admins can approve user accounts.');
@@ -298,6 +335,65 @@ class UserController extends Controller
             'message' => $previousStatus === 'active'
                 ? 'User account is already active.'
                 : 'User account approved successfully.',
+            'data' => new UserResource($user),
+            'meta' => null,
+            'errors' => null,
+        ]);
+    }
+
+    public function reject(Request $request, string $id)
+    {
+        abort_unless(auth()->user()?->role === 'admin', 403, 'Only admins can reject user accounts.');
+
+        $data = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $user = User::withoutGlobalScopes()
+            ->where('company_id', auth()->user()->company_id)
+            ->where('role', 'retailer')
+            ->findOrFail($id);
+
+        if ($user->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending registrations can be rejected.',
+                'data' => null,
+                'meta' => null,
+                'errors' => ['status' => ['This registration is no longer pending.']],
+            ], 422);
+        }
+
+        $metadata = $user->metadata ?? [];
+        $metadata['registration_review'] = [
+            'action' => 'rejected',
+            'reason' => $data['reason'] ?? null,
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now()->toIso8601String(),
+        ];
+
+        $user->status = 'inactive';
+        $user->metadata = $metadata;
+        $user->save();
+
+        AuditLog::create([
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
+            'event' => 'user.rejected',
+            'auditable_type' => User::class,
+            'auditable_id' => $user->id,
+            'old_values' => ['status' => 'pending'],
+            'new_values' => [
+                'status' => 'inactive',
+                'reason' => $data['reason'] ?? null,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registration rejected.',
             'data' => new UserResource($user),
             'meta' => null,
             'errors' => null,
