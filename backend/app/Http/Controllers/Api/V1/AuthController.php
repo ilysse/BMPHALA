@@ -191,8 +191,7 @@ class AuthController extends Controller
 
         return DB::transaction(function () use ($data) {
             $companyId = null;
-            $role = 'retailer'; // Default role for registration
-            $status = 'pending';
+            $salesRep = null;
 
             if (!empty($data['referral_code'])) {
                 // Registering under an existing company (via referral code from a Sales Rep)
@@ -219,16 +218,24 @@ class AuthController extends Controller
 
                 $companyId = $salesRep->company_id;
             } else {
-                // Creating a new company (SaaS sign-up)
-                $company = Company::create([
-                    'id' => (string) Str::ulid(),
-                    'name' => $data['company_name'],
-                    'status' => 'active',
-                ]);
-                $companyId = $company->id;
-                $role = 'admin'; // First user is the admin
-                // A new tenant needs one active administrator to approve later users.
-                $status = 'active';
+                $companyId = config('services.registration.company_id');
+
+                $companyExists = $companyId && Company::query()
+                    ->whereKey($companyId)
+                    ->where('status', 'active')
+                    ->exists();
+
+                if (!$companyExists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Retailer registration is temporarily unavailable.',
+                        'data' => null,
+                        'meta' => null,
+                        'errors' => [
+                            'registration' => ['The primary company is not configured.'],
+                        ],
+                    ], 503);
+                }
             }
 
             // Temporarily set tenant context for creation
@@ -240,50 +247,23 @@ class AuthController extends Controller
                 'name' => $data['name'],
                 'email' => $data['email'] ?? null,
                 'password' => Hash::make($data['password']),
-                'role' => $role,
-                'status' => $status,
+                'role' => 'retailer',
+                'status' => 'pending',
                 'metadata' => [
                     'phone' => $data['phone'] ?? null,
-                    'responsible_id' => isset($salesRep) ? $salesRep->id : null,
+                    'responsible_id' => $salesRep?->id,
+                    'shop_name' => $data['company_name'] ?? $data['name'],
                 ],
                 'latitude' => $data['latitude'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
                 'address' => $data['address'] ?? null,
             ]);
 
-            if ($user->status === 'pending') {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Registration submitted. An administrator must approve your account before you can sign in.',
-                    'data' => [
-                        'approval_required' => true,
-                        'user' => new UserResource($user),
-                    ],
-                    'meta' => null,
-                    'errors' => null,
-                ], 201);
-            }
-
-            $accessToken = $this->jwtService->encode([
-                'sub' => $user->id,
-                'type' => 'access',
-                'role' => $user->role,
-                'company_id' => $user->company_id,
-            ], 3600);
-
-            $refreshToken = $this->jwtService->encode([
-                'sub' => $user->id,
-                'type' => 'refresh',
-            ], 86400 * 60);
-
             return response()->json([
                 'success' => true,
-                'message' => 'Registration successful.',
+                'message' => 'Registration submitted. An administrator must approve your account before you can sign in.',
                 'data' => [
-                    'access_token' => $accessToken,
-                    'refresh_token' => $refreshToken,
-                    'token_type' => 'Bearer',
-                    'expires_in' => 3600,
+                    'approval_required' => true,
                     'user' => new UserResource($user),
                 ],
                 'meta' => null,

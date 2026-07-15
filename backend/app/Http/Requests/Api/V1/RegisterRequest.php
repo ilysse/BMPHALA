@@ -25,7 +25,7 @@ class RegisterRequest extends FormRequest
             'name'          => ['required', 'string', 'max:255'],
             'email'         => ['nullable', 'required_without:phone', 'email', 'max:255', 'unique:users,email'],
             'password'      => ['required', 'string', 'min:8', 'confirmed'],
-            'company_name'  => ['required_without:referral_code', 'string', 'max:255'],
+            'company_name'  => ['nullable', 'string', 'max:255'],
             'phone'         => ['nullable', 'required_without:email', 'string', 'max:20'],
             'referral_code' => ['nullable', 'string', 'max:64'],
             'latitude'      => ['nullable', 'numeric', 'between:-90,90'],

@@ -45,6 +45,8 @@ class BmpTest extends TestCase
         $this->retailerA = $this->createUser($this->companyA, 'retailer@companya.com', 'retailer');
         $this->distributorA = $this->createUser($this->companyA, 'distributor@companya.com', 'distributor');
         $this->adminB = $this->createUser($this->companyB, 'admin@companyb.com', 'admin');
+
+        config(['services.registration.company_id' => $this->companyA->id]);
     }
 
     private function createUser(Company $company, string $email, string $role): User
@@ -452,7 +454,11 @@ class BmpTest extends TestCase
         $emailOnly->assertCreated()
             ->assertJsonPath('data.user.email', 'email-only@example.com')
             ->assertJsonPath('data.user.phone', null)
-            ->assertJsonStructure(['data' => ['access_token', 'refresh_token']]);
+            ->assertJsonPath('data.user.role', 'retailer')
+            ->assertJsonPath('data.user.status', 'pending')
+            ->assertJsonPath('data.user.company_id', $this->companyA->id)
+            ->assertJsonPath('data.approval_required', true)
+            ->assertJsonMissingPath('data.access_token');
 
         $phoneOnly = $this->postJson('/api/v1/auth/register', [
             'name' => 'Phone Only Owner',
@@ -465,7 +471,22 @@ class BmpTest extends TestCase
         $phoneOnly->assertCreated()
             ->assertJsonPath('data.user.email', null)
             ->assertJsonPath('data.user.phone', '0651463220')
-            ->assertJsonStructure(['data' => ['access_token', 'refresh_token']]);
+            ->assertJsonPath('data.user.role', 'retailer')
+            ->assertJsonPath('data.user.status', 'pending')
+            ->assertJsonPath('data.user.company_id', $this->companyA->id)
+            ->assertJsonPath('data.approval_required', true);
+
+        $this->postJson('/api/v1/auth/login', [
+            'identifier' => '0651463220',
+            'password' => 'password',
+        ])->assertForbidden()
+            ->assertJsonPath('message', 'Your account is waiting for administrator approval.');
+
+        $this->putJson(
+            "/api/v1/users/{$phoneOnly->json('data.user.id')}/approve",
+            [],
+            $this->authHeader($this->adminA)
+        )->assertOk();
 
         $this->postJson('/api/v1/auth/login', [
             'identifier' => '0651463220',
@@ -484,7 +505,8 @@ class BmpTest extends TestCase
 
         $both->assertCreated()
             ->assertJsonPath('data.user.email', 'both-contacts@example.com')
-            ->assertJsonPath('data.user.phone', '+212612345699');
+            ->assertJsonPath('data.user.phone', '+212612345699')
+            ->assertJsonPath('data.user.status', 'pending');
 
         $this->postJson('/api/v1/auth/register', [
             'name' => 'Missing Contacts Owner',
@@ -493,6 +515,8 @@ class BmpTest extends TestCase
             'password_confirmation' => 'password',
         ])->assertUnprocessable()
             ->assertJsonValidationErrors(['email', 'phone']);
+
+        $this->assertSame(2, Company::withoutGlobalScopes()->count());
     }
 
     public function test_it_enforces_multi_tenancy_isolation_for_products(): void

@@ -41,4 +41,8 @@ return [
         'ca_bundle' => env('FIREBASE_CA_BUNDLE'),
     ],
 
+    'registration' => [
+        'company_id' => env('REGISTRATION_COMPANY_ID'),
+    ],
+
 ];
