@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Company;
+use App\Models\FeatureFlag;
 use App\Services\JwtAuthService;
 use App\Services\OtpService;
 use App\Services\TenantManager;
@@ -87,6 +88,34 @@ class AuthController extends Controller
         }
 
         return $this->tokenResponse($user, 'Login successful.');
+    }
+
+    public function config()
+    {
+        $companyId = config('services.registration.company_id');
+        $companyExists = $companyId && Company::query()
+            ->whereKey($companyId)
+            ->where('status', 'active')
+            ->exists();
+
+        $otpEnabled = false;
+        if ($companyExists) {
+            $flag = FeatureFlag::withoutGlobalScopes()
+                ->where('company_id', $companyId)
+                ->where('key', 'otp_login')
+                ->first();
+            $otpEnabled = (bool) ($flag?->is_enabled ?? true);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Authentication configuration retrieved.',
+            'data' => [
+                'otp_login_enabled' => $otpEnabled,
+            ],
+            'meta' => null,
+            'errors' => null,
+        ]);
     }
 
     public function requestOtp(Request $request)

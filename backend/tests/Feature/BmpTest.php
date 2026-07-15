@@ -186,15 +186,36 @@ class BmpTest extends TestCase
             'metadata' => ['phone' => '+212612345678'],
         ])->save();
 
+        $this->getJson('/api/v1/auth/config')
+            ->assertOk()
+            ->assertJsonPath('data.otp_login_enabled', true);
+
+        $this->postJson('/api/v1/auth/otp/request', [
+            'phone' => '0612345678',
+            'channel' => 'sms',
+        ])->assertOk();
+        $challenge = OtpChallenge::latest()->firstOrFail();
+
         $this->putJson('/api/v1/features/otp_login', [
             'is_enabled' => false,
         ], $this->authHeader($this->adminA))
             ->assertOk()
             ->assertJsonPath('data.is_enabled', false);
 
+        $this->getJson('/api/v1/auth/config')
+            ->assertOk()
+            ->assertJsonPath('data.otp_login_enabled', false);
+
         $this->postJson('/api/v1/auth/otp/request', [
             'phone' => '0612345678',
             'channel' => 'sms',
+        ])->assertUnprocessable()
+            ->assertJsonPath('message', 'OTP login is disabled for this company.');
+
+        $this->postJson('/api/v1/auth/otp/verify', [
+            'phone' => '0612345678',
+            'channel' => 'sms',
+            'code' => $challenge->metadata['test_code'],
         ])->assertUnprocessable()
             ->assertJsonPath('message', 'OTP login is disabled for this company.');
 
@@ -210,6 +231,10 @@ class BmpTest extends TestCase
             'phone' => '0612345678',
             'channel' => 'sms',
         ])->assertOk();
+
+        $this->getJson('/api/v1/auth/config')
+            ->assertOk()
+            ->assertJsonPath('data.otp_login_enabled', true);
     }
 
     public function test_registration_rejects_a_phone_already_linked_to_an_account(): void

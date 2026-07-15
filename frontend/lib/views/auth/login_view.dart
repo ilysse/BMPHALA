@@ -24,6 +24,16 @@ class _LoginViewState extends State<LoginView> {
   String _otpChannel = 'sms';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AuthProvider>().loadAuthConfig();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -77,8 +87,8 @@ class _LoginViewState extends State<LoginView> {
       SnackBar(
         content: Text(
           success
-              ? 'OTP sent. Check your $_otpChannel messages.'
-              : auth.error ?? 'Unable to send OTP.',
+              ? context.tr('otp_sent_message')
+              : auth.error ?? context.tr('unable_send_otp'),
         ),
         backgroundColor: success ? AppColors.secondary : AppColors.error,
       ),
@@ -99,8 +109,8 @@ class _LoginViewState extends State<LoginView> {
       SnackBar(
         content: Text(
           success
-              ? 'Welcome back, ${auth.currentUser?.username}!'
-              : auth.error ?? 'OTP verification failed.',
+              ? '${context.tr('success')}: ${auth.currentUser?.username ?? ''}'
+              : auth.error ?? context.tr('otp_verification_failed'),
         ),
         backgroundColor: success ? AppColors.secondary : AppColors.error,
       ),
@@ -192,42 +202,7 @@ class _LoginViewState extends State<LoginView> {
                           ),
                         ],
                       ),
-                      child: DefaultTabController(
-                        length: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              context.tr('login'),
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 22,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            TabBar(
-                              tabs: [
-                                Tab(text: context.tr('password_login')),
-                                Tab(text: context.tr('phone_otp')),
-                              ],
-                              labelColor: AppColors.primary,
-                              unselectedLabelColor: AppColors.textSecondary,
-                              indicatorColor: AppColors.primary,
-                            ),
-                            const SizedBox(height: 18),
-                            SizedBox(
-                              height: 300,
-                              child: TabBarView(
-                                children: [
-                                  _buildPasswordLogin(auth),
-                                  _buildOtpLogin(auth),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: _buildLoginCard(auth),
                     ),
                     const SizedBox(height: 24),
 
@@ -305,6 +280,72 @@ class _LoginViewState extends State<LoginView> {
                   );
                 },
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoginCard(AuthProvider auth) {
+    final title = Text(
+      context.tr('login'),
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        color: AppColors.textPrimary,
+        fontSize: 22,
+      ),
+    );
+
+    if (!auth.otpLoginEnabled) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          title,
+          if (!auth.authConfigLoaded) ...[
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(minHeight: 2),
+          ] else ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                context.tr('otp_login_disabled_by_admin'),
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          SizedBox(height: 300, child: _buildPasswordLogin(auth)),
+        ],
+      );
+    }
+
+    return DefaultTabController(
+      key: const ValueKey('otp-login-enabled'),
+      length: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          title,
+          const SizedBox(height: 16),
+          TabBar(
+            tabs: [
+              Tab(text: context.tr('password_login')),
+              Tab(text: context.tr('phone_otp')),
+            ],
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.primary,
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 300,
+            child: TabBarView(
+              children: [_buildPasswordLogin(auth), _buildOtpLogin(auth)],
             ),
           ),
         ],
@@ -430,7 +471,9 @@ class _LoginViewState extends State<LoginView> {
         const SizedBox(height: 16),
         _buildAuthButton(
           auth: auth,
-          label: _otpRequested ? 'Verify OTP' : 'Send OTP',
+          label: _otpRequested
+              ? context.tr('verify_otp')
+              : context.tr('send_otp'),
           onPressed: () =>
               _otpRequested ? _verifyOtp(context) : _requestOtp(context),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/colors.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../shared/location_picker_fields.dart';
 
@@ -63,10 +64,8 @@ class _OnboardingViewState extends State<OnboardingView> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Registration submitted. An administrator must approve your account before you can sign in.',
-          ),
+        SnackBar(
+          content: Text(context.tr('registration_submitted_approval')),
           backgroundColor: AppColors.secondary,
         ),
       );
@@ -74,7 +73,7 @@ class _OnboardingViewState extends State<OnboardingView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.error ?? 'Onboarding failed'),
+          content: Text(auth.error ?? context.tr('onboarding_failed')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -87,9 +86,9 @@ class _OnboardingViewState extends State<OnboardingView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Retailer Onboarding',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          context.tr('retailer_onboarding'),
+          style: const TextStyle(color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -109,7 +108,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             children: [
               // Welcome header
               Text(
-                'Join the BMP Network',
+                context.tr('join_bmp_network'),
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontSize: 28,
                   color: AppColors.textPrimary,
@@ -117,7 +116,7 @@ class _OnboardingViewState extends State<OnboardingView> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Register your retail shop to start ordering directly from certified distributors.',
+                context.tr('registration_intro'),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 32),
@@ -135,15 +134,15 @@ class _OnboardingViewState extends State<OnboardingView> {
                         // Shop Name Field
                         TextFormField(
                           controller: _shopNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Shop Name',
-                            prefixIcon: Icon(
+                          decoration: InputDecoration(
+                            labelText: context.tr('shop_name'),
+                            prefixIcon: const Icon(
                               Icons.storefront,
                               color: AppColors.primary,
                             ),
                           ),
                           validator: (val) => val == null || val.isEmpty
-                              ? 'Enter your shop name'
+                              ? context.tr('enter_shop_name')
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -152,9 +151,9 @@ class _OnboardingViewState extends State<OnboardingView> {
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'Email Address (optional with phone)',
-                            prefixIcon: Icon(
+                          decoration: InputDecoration(
+                            labelText: context.tr('email_optional_with_phone'),
+                            prefixIcon: const Icon(
                               Icons.email_outlined,
                               color: AppColors.primary,
                             ),
@@ -163,10 +162,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                             final email = val?.trim() ?? '';
                             final phone = _phoneController.text.trim();
                             if (email.isEmpty && phone.isEmpty) {
-                              return 'Enter an email address or phone number';
+                              return context.tr('enter_email_or_phone');
                             }
                             if (email.isNotEmpty && !email.contains('@')) {
-                              return 'Enter a valid email address';
+                              return context.tr('enter_valid_email');
                             }
                             return null;
                           },
@@ -176,10 +175,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                         TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            labelText: 'Phone Number (optional with email)',
-                            hintText: 'e.g. 0612345678',
-                            prefixIcon: Icon(
+                          decoration: InputDecoration(
+                            labelText: context.tr('phone_optional_with_email'),
+                            hintText: context.tr('phone_example'),
+                            prefixIcon: const Icon(
                               Icons.phone_outlined,
                               color: AppColors.primary,
                             ),
@@ -188,10 +187,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                             final phone = val?.trim() ?? '';
                             final email = _emailController.text.trim();
                             if (phone.isEmpty && email.isEmpty) {
-                              return 'Enter an email address or phone number';
+                              return context.tr('enter_email_or_phone');
                             }
                             if (phone.isNotEmpty && phone.length < 8) {
-                              return 'Enter a valid phone number';
+                              return context.tr('enter_valid_phone');
                             }
                             return null;
                           },
@@ -203,7 +202,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: context.tr('password'),
                             prefixIcon: const Icon(
                               Icons.lock_outline,
                               color: AppColors.primary,
@@ -220,7 +219,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                             ),
                           ),
                           validator: (val) => val == null || val.length < 8
-                              ? 'Password must be at least 8 characters'
+                              ? context.tr('password_min_8')
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -228,10 +227,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                         // Referral Code (Optional)
                         TextFormField(
                           controller: _referralController,
-                          decoration: const InputDecoration(
-                            labelText: 'Referral Code (Optional)',
-                            hintText: 'e.g. REF_ALEX_99',
-                            prefixIcon: Icon(
+                          decoration: InputDecoration(
+                            labelText: context.tr('referral_code_optional'),
+                            hintText: context.tr('referral_code_example'),
+                            prefixIcon: const Icon(
                               Icons.card_membership,
                               color: AppColors.primary,
                             ),
@@ -239,7 +238,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'If a Sales Representative helped you sign up, enter their referral code to link your account.',
+                          context.tr('referral_help'),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -250,7 +249,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                           addressController: _addressController,
                           latitudeController: _latitudeController,
                           longitudeController: _longitudeController,
-                          addressLabel: 'Shop Address',
+                          addressLabel: context.tr('shop_address'),
                         ),
                         const SizedBox(height: 32),
 
@@ -270,7 +269,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                                   ),
                                 ),
                                 onPressed: _submit,
-                                child: const Text('Submit & Onboard'),
+                                child: Text(context.tr('submit_onboarding')),
                               ),
                       ],
                     ),

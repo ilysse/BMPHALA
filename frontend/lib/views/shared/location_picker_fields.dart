@@ -38,7 +38,7 @@ class LocationPickerFields extends StatelessWidget {
             ),
           ),
           validator: (value) => value != null && value.length > 500
-              ? 'Address must be under 500 characters'
+              ? context.tr('address_under_500')
               : null,
         ),
         const SizedBox(height: 12),
@@ -58,7 +58,7 @@ class LocationPickerFields extends StatelessWidget {
                     color: AppColors.primary,
                   ),
                 ),
-                validator: _validateLatitude,
+                validator: (value) => _validateLatitude(context, value),
               ),
             ),
             const SizedBox(width: 12),
@@ -76,7 +76,7 @@ class LocationPickerFields extends StatelessWidget {
                     color: AppColors.primary,
                   ),
                 ),
-                validator: _validateLongitude,
+                validator: (value) => _validateLongitude(context, value),
               ),
             ),
           ],
@@ -91,26 +91,26 @@ class LocationPickerFields extends StatelessWidget {
     );
   }
 
-  String? _validateLatitude(String? value) {
+  String? _validateLatitude(BuildContext context, String? value) {
     final text = value?.trim() ?? '';
     final longitude = longitudeController.text.trim();
     if (text.isEmpty && longitude.isEmpty) return null;
-    if (text.isEmpty) return 'Required';
+    if (text.isEmpty) return context.tr('required');
     final latitude = double.tryParse(text);
     if (!_isValidLatitude(latitude)) {
-      return 'Invalid';
+      return context.tr('invalid');
     }
     return null;
   }
 
-  String? _validateLongitude(String? value) {
+  String? _validateLongitude(BuildContext context, String? value) {
     final text = value?.trim() ?? '';
     final latitude = latitudeController.text.trim();
     if (text.isEmpty && latitude.isEmpty) return null;
-    if (text.isEmpty) return 'Required';
+    if (text.isEmpty) return context.tr('required');
     final longitude = double.tryParse(text);
     if (!_isValidLongitude(longitude)) {
-      return 'Invalid';
+      return context.tr('invalid');
     }
     return null;
   }

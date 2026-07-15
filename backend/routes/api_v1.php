@@ -48,6 +48,7 @@ Route::get('/images', function (Illuminate\Http\Request $request) {
 });
 
 // Public Auth Routes
+Route::get('/auth/config', [AuthController::class, 'config']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/mobile-login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);

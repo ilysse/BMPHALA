@@ -7,20 +7,50 @@ import 'package:dio/dio.dart';
 
 class AuthProvider with ChangeNotifier {
   final StorageService _storageService = StorageService();
-  final ApiService _apiService = ApiService();
+  final ApiService _apiService;
+
+  AuthProvider({ApiService? apiService})
+    : _apiService = apiService ?? ApiService();
 
   User? _currentUser;
   bool _isLoading = false;
+  bool _authConfigLoaded = false;
+  bool _otpLoginEnabled = false;
   String? _error;
 
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
+  bool get authConfigLoaded => _authConfigLoaded;
+  bool get otpLoginEnabled => _otpLoginEnabled;
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
 
   void clearError() {
     if (_error == null) return;
     _error = null;
+    notifyListeners();
+  }
+
+  Future<void> loadAuthConfig() async {
+    try {
+      if (_apiService.mockMode) {
+        _otpLoginEnabled = true;
+      } else {
+        final response = await _apiService.client.get('/auth/config');
+        final body = response.data;
+        _otpLoginEnabled =
+            response.statusCode == 200 &&
+            body is Map &&
+            body['success'] == true &&
+            body['data'] is Map &&
+            body['data']['otp_login_enabled'] == true;
+      }
+    } catch (_) {
+      // Keep OTP unavailable when its server-side status cannot be confirmed.
+      _otpLoginEnabled = false;
+    }
+
+    _authConfigLoaded = true;
     notifyListeners();
   }
 
@@ -142,6 +172,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      await loadAuthConfig();
+      if (!_otpLoginEnabled) {
+        throw Exception('OTP login is disabled by the administrator.');
+      }
       if (phone.trim().length < 8) {
         throw Exception('Enter a valid phone number.');
       }
@@ -185,6 +219,10 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      await loadAuthConfig();
+      if (!_otpLoginEnabled) {
+        throw Exception('OTP login is disabled by the administrator.');
+      }
       if (!RegExp(r'^\d{6}$').hasMatch(code.trim())) {
         throw Exception('Enter the 6-digit OTP code.');
       }
