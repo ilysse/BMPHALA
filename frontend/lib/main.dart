@@ -25,6 +25,9 @@ import 'views/admin/admin_main_view.dart';
 import 'views/representative/representative_main_view.dart';
 import 'models/user.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/storage_service.dart';
+import 'views/auth/welcome_onboarding_view.dart';
+import 'views/auth/onboarding_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,22 +80,45 @@ class RootNavigator extends StatefulWidget {
 }
 
 class _RootNavigatorState extends State<RootNavigator> {
-  late Future<bool> _autoLoginFuture;
+  final StorageService _storageService = StorageService();
+  late Future<void> _startupFuture;
+  String? _welcomeChoice;
 
   @override
   void initState() {
     super.initState();
-    // Try to auto login using stored secure JWT on app startup
-    _autoLoginFuture = Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    ).tryAutoLogin();
+    _startupFuture = _initialize();
+  }
+
+  Future<void> _initialize() async {
+    final auth = context.read<AuthProvider>();
+    final language = context.read<LanguageProvider>();
+    await Future.wait([auth.tryAutoLogin(), language.ensureLoaded()]);
+    _welcomeChoice = await _storageService.getWelcomeChoice();
+  }
+
+  Future<void> _choosePath(String choice) async {
+    await _storageService.saveWelcomeChoice(choice);
+    if (!mounted) return;
+    setState(() => _welcomeChoice = choice);
+  }
+
+  Future<void> _returnToWelcome() async {
+    await _storageService.clearWelcomeChoice();
+    if (!mounted) return;
+    setState(() => _welcomeChoice = null);
+  }
+
+  Future<void> _registrationSubmitted() async {
+    await _storageService.saveWelcomeChoice('existing');
+    if (!mounted) return;
+    setState(() => _welcomeChoice = 'existing');
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _autoLoginFuture,
+    return FutureBuilder<void>(
+      future: _startupFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _SplashLoadingScreen();
@@ -101,6 +127,20 @@ class _RootNavigatorState extends State<RootNavigator> {
         return Consumer<AuthProvider>(
           builder: (context, auth, _) {
             if (!auth.isAuthenticated) {
+              if (_welcomeChoice == null) {
+                return WelcomeOnboardingView(
+                  onNewUser: () => _choosePath('new'),
+                  onExistingUser: () => _choosePath('existing'),
+                );
+              }
+
+              if (_welcomeChoice == 'new') {
+                return OnboardingView(
+                  onBack: _returnToWelcome,
+                  onRegistrationSubmitted: _registrationSubmitted,
+                );
+              }
+
               return const LoginView();
             }
 

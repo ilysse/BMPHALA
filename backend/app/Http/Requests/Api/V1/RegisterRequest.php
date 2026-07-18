@@ -28,9 +28,9 @@ class RegisterRequest extends FormRequest
             'company_name'  => ['nullable', 'string', 'max:255'],
             'phone'         => ['nullable', 'required_without:email', 'string', 'max:20'],
             'referral_code' => ['nullable', 'string', 'max:64'],
-            'latitude'      => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude'     => ['nullable', 'numeric', 'between:-180,180'],
-            'address'       => ['nullable', 'string', 'max:500'],
+            'latitude'      => ['required', 'numeric', 'between:-90,90'],
+            'longitude'     => ['required', 'numeric', 'between:-180,180'],
+            'address'       => ['required', 'string', 'max:500'],
         ];
     }
 }

@@ -6,7 +6,10 @@ import '../../providers/auth_provider.dart';
 import '../shared/location_picker_fields.dart';
 
 class OnboardingView extends StatefulWidget {
-  const OnboardingView({super.key});
+  final VoidCallback? onBack;
+  final VoidCallback? onRegistrationSubmitted;
+
+  const OnboardingView({super.key, this.onBack, this.onRegistrationSubmitted});
 
   @override
   State<OnboardingView> createState() => _OnboardingViewState();
@@ -69,7 +72,11 @@ class _OnboardingViewState extends State<OnboardingView> {
           backgroundColor: AppColors.secondary,
         ),
       );
-      Navigator.of(context).pop();
+      if (widget.onRegistrationSubmitted != null) {
+        widget.onRegistrationSubmitted!();
+      } else {
+        Navigator.of(context).pop();
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -92,7 +99,7 @@ class _OnboardingViewState extends State<OnboardingView> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
@@ -250,6 +257,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                           latitudeController: _latitudeController,
                           longitudeController: _longitudeController,
                           addressLabel: context.tr('shop_address'),
+                          required: true,
                         ),
                         const SizedBox(height: 32),
 

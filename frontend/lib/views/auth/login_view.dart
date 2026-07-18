@@ -4,6 +4,7 @@ import '../../core/constants/colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../core/localization/app_localizations.dart';
+import '../shared/legal_links.dart';
 import 'onboarding_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -217,6 +218,7 @@ class _LoginViewState extends State<LoginView> {
                           ),
                         ),
                         TextButton(
+                          key: const ValueKey('register-retailer-button'),
                           onPressed: () async {
                             auth.clearError();
                             await Navigator.of(context).push(
@@ -237,6 +239,7 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ],
                     ),
+                    const LegalLinks(),
                     const SizedBox(height: 24),
                   ],
                 ),

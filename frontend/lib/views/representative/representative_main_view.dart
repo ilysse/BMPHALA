@@ -545,6 +545,7 @@ class _RepresentativeOnboardTabState extends State<_RepresentativeOnboardTab> {
               latitudeController: _latitudeController,
               longitudeController: _longitudeController,
               addressLabel: 'Retailer Address',
+              required: true,
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(

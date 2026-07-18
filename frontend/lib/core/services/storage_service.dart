@@ -8,8 +8,12 @@ class StorageService {
   static const String _userRoleKey = 'user_role';
   static const String _userIdKey = 'user_id';
   static const String _usernameKey = 'username';
+  static const String _welcomeChoiceKey = 'welcome_choice';
 
-  Future<void> saveTokens({required String accessToken, required String refreshToken}) async {
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);
     await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
   }
@@ -38,6 +42,18 @@ class StorageService {
       'username': await _secureStorage.read(key: _usernameKey),
       'role': await _secureStorage.read(key: _userRoleKey),
     };
+  }
+
+  Future<String?> getWelcomeChoice() async {
+    return _secureStorage.read(key: _welcomeChoiceKey);
+  }
+
+  Future<void> saveWelcomeChoice(String choice) async {
+    await _secureStorage.write(key: _welcomeChoiceKey, value: choice);
+  }
+
+  Future<void> clearWelcomeChoice() async {
+    await _secureStorage.delete(key: _welcomeChoiceKey);
   }
 
   Future<void> clearAll() async {

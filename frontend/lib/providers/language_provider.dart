@@ -4,13 +4,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class LanguageProvider extends ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   Locale _locale = const Locale('ar');
+  late final Future<void> _loadFuture;
 
   Locale get locale => _locale;
   bool get isRTL => _locale.languageCode == 'ar';
 
   LanguageProvider() {
-    _loadLanguage();
+    _loadFuture = _loadLanguage();
   }
+
+  Future<void> ensureLoaded() => _loadFuture;
 
   Future<void> _loadLanguage() async {
     final savedLang = await _storage.read(key: 'language_code');
@@ -36,6 +39,35 @@ class LanguageProvider extends ChangeNotifier {
       'app_title_ar': 'حلوات للمعاملات',
       'app_subtitle':
           'Store ERP, CRM, distribution, stock, sales, and invoices',
+      'back': 'Back',
+      'continue': 'Continue',
+      'welcome_start_here': 'Start here',
+      'welcome_language_title': 'Choose your default language',
+      'welcome_language_subtitle':
+          'You can change this later from your account settings.',
+      'welcome_choose_path': 'Tell us about you',
+      'welcome_account_title': 'How are you joining Halawat?',
+      'welcome_account_subtitle':
+          'We will take you directly to the right place.',
+      'welcome_new_seller': 'I am a new seller',
+      'welcome_new_seller_subtitle':
+          'Register your shop, add its location, and request approval.',
+      'welcome_register_shop': 'Create my shop account',
+      'welcome_existing_user': 'I already have an account',
+      'welcome_existing_user_subtitle':
+          'Sign in as an admin, seller, distributor, or representative.',
+      'welcome_sign_in': 'Go to secure sign in',
+      'welcome_approval_note':
+          'New seller accounts are reviewed by an administrator.',
+      'welcome_trade_network': 'The connected trade network',
+      'welcome_built_for_morocco': 'BUILT FOR MOROCCAN COMMERCE',
+      'welcome_story_title': 'Your shop. Your stock. One clear view.',
+      'welcome_story_subtitle':
+          'From first order to final delivery, Halawat keeps every transaction moving.',
+      'welcome_footer': 'Commerce works better when everyone is connected.',
+      'privacy_policy': 'Privacy Policy',
+      'terms_of_service': 'Terms of Service',
+      'delete_account': 'Delete account',
       'login': 'Login',
       'email': 'Email Address',
       'email_or_phone': 'Email or phone number',
@@ -318,7 +350,7 @@ class LanguageProvider extends ChangeNotifier {
       'registrations': 'Registrations',
       'pending_registrations': 'Pending registrations',
       'registration_review_help':
-          'Review new retailer accounts before they can sign in.',
+          'Review each seller location and account before approving sign-in access.',
       'search_registrations': 'Search by shop, email, phone, or address',
       'no_pending_registrations': 'No registrations waiting',
       'no_pending_registrations_help':
@@ -335,6 +367,12 @@ class LanguageProvider extends ChangeNotifier {
       'rejection_failed': 'Registration rejection failed',
       'submitted': 'Submitted',
       'referred_by': 'Referred by',
+      'seller_location': 'Seller location',
+      'view_on_map': 'View map',
+      'open_google_maps': 'Open Google Maps',
+      'location_not_provided': 'Location not provided',
+      'location_missing_review_warning': 'Review carefully before approval',
+      'map_open_failed': 'Could not open the map.',
       // Reports
       'filters': 'Filters',
       'date_from': 'From',
@@ -497,6 +535,32 @@ class LanguageProvider extends ChangeNotifier {
       'app_title_ar': 'حلوات للمعاملات',
       'app_subtitle':
           'نظام ERP و CRM للمتاجر والمخزون والمبيعات والفواتير والتوزيع',
+      'back': 'رجوع',
+      'continue': 'متابعة',
+      'welcome_start_here': 'ابدأ من هنا',
+      'welcome_language_title': 'اختر اللغة الافتراضية',
+      'welcome_language_subtitle': 'يمكنك تغيير اللغة لاحقاً من إعدادات حسابك.',
+      'welcome_choose_path': 'أخبرنا عنك',
+      'welcome_account_title': 'كيف ستنضم إلى حلوات؟',
+      'welcome_account_subtitle': 'سنوجهك مباشرة إلى المكان المناسب.',
+      'welcome_new_seller': 'أنا تاجر جديد',
+      'welcome_new_seller_subtitle':
+          'سجل متجرك وحدد موقعه ثم أرسل طلب الموافقة.',
+      'welcome_register_shop': 'إنشاء حساب متجري',
+      'welcome_existing_user': 'لدي حساب بالفعل',
+      'welcome_existing_user_subtitle':
+          'سجل الدخول كمسؤول أو تاجر أو موزع أو مندوب.',
+      'welcome_sign_in': 'الانتقال إلى تسجيل الدخول الآمن',
+      'welcome_approval_note': 'تتم مراجعة حسابات التجار الجدد من طرف المسؤول.',
+      'welcome_trade_network': 'شبكة التجارة المتصلة',
+      'welcome_built_for_morocco': 'مصمم للتجارة المغربية',
+      'welcome_story_title': 'متجرك. مخزونك. رؤية واضحة واحدة.',
+      'welcome_story_subtitle':
+          'من أول طلب إلى آخر عملية تسليم، تساعدك حلوات على إدارة كل معاملة.',
+      'welcome_footer': 'التجارة تعمل بشكل أفضل عندما يكون الجميع متصلين.',
+      'privacy_policy': 'سياسة الخصوصية',
+      'terms_of_service': 'شروط الاستخدام',
+      'delete_account': 'حذف الحساب',
       'login': 'تسجيل الدخول',
       'email': 'البريد الإلكتروني',
       'email_or_phone': 'البريد الإلكتروني أو رقم الهاتف',
@@ -778,7 +842,7 @@ class LanguageProvider extends ChangeNotifier {
       'registrations': 'طلبات التسجيل',
       'pending_registrations': 'طلبات التسجيل المعلقة',
       'registration_review_help':
-          'راجع حسابات التجار الجدد قبل السماح لهم بتسجيل الدخول.',
+          'راجع موقع كل تاجر وحسابه قبل الموافقة على تسجيل الدخول.',
       'search_registrations': 'ابحث بالمتجر أو البريد أو الهاتف أو العنوان',
       'no_pending_registrations': 'لا توجد طلبات في الانتظار',
       'no_pending_registrations_help':
@@ -795,6 +859,12 @@ class LanguageProvider extends ChangeNotifier {
       'rejection_failed': 'فشل رفض طلب التسجيل',
       'submitted': 'تاريخ الطلب',
       'referred_by': 'تمت الإحالة بواسطة',
+      'seller_location': 'موقع التاجر',
+      'view_on_map': 'عرض الخريطة',
+      'open_google_maps': 'فتح خرائط Google',
+      'location_not_provided': 'لم يتم تحديد الموقع',
+      'location_missing_review_warning': 'راجع الطلب بعناية قبل الموافقة',
+      'map_open_failed': 'تعذر فتح الخريطة.',
       // Reports
       'filters': 'تصفية',
       'date_from': 'من',

@@ -250,6 +250,9 @@ class BmpTest extends TestCase
             'password_confirmation' => 'password',
             'phone' => '0612345678',
             'referral_code' => 'REP-PHONE',
+            'latitude' => 33.5731,
+            'longitude' => -7.5898,
+            'address' => 'Casablanca',
         ])->assertUnprocessable()
             ->assertJsonValidationErrors('phone');
     }
@@ -365,6 +368,14 @@ class BmpTest extends TestCase
             'company_id' => $this->companyA->id,
             'address' => 'Paris Center',
         ]);
+
+        $this->postJson('/api/v1/auth/register', [
+            'name' => 'Unmapped Retailer',
+            'email' => 'unmapped-retailer@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['address', 'latitude', 'longitude']);
     }
 
     public function test_registered_retailer_requires_admin_approval_before_login(): void
@@ -381,6 +392,9 @@ class BmpTest extends TestCase
             'password_confirmation' => 'password',
             'phone' => '+212611223399',
             'referral_code' => 'REP-APPROVAL',
+            'latitude' => 33.5731,
+            'longitude' => -7.5898,
+            'address' => 'Casablanca',
         ]);
 
         $registration->assertCreated()
@@ -429,6 +443,9 @@ class BmpTest extends TestCase
             'name' => 'Pending Shop A',
             'status' => 'pending',
             'metadata' => ['phone' => '+212611111111'],
+            'latitude' => 33.5731,
+            'longitude' => -7.5898,
+            'address' => 'Casablanca Center',
         ])->save();
 
         $pendingB = $this->createUser($this->companyB, 'pending-b@example.com', 'retailer');
@@ -442,6 +459,9 @@ class BmpTest extends TestCase
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.id', $pendingA->id)
             ->assertJsonPath('data.0.status', 'pending')
+            ->assertJsonPath('data.0.latitude', '33.5731000')
+            ->assertJsonPath('data.0.longitude', '-7.5898000')
+            ->assertJsonPath('data.0.address', 'Casablanca Center')
             ->assertJsonMissing(['id' => $pendingB->id]);
 
         $this->putJson("/api/v1/users/{$pendingA->id}/reject", [
@@ -474,6 +494,9 @@ class BmpTest extends TestCase
             'email' => 'email-only@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'latitude' => 33.5731,
+            'longitude' => -7.5898,
+            'address' => 'Casablanca Email Shop',
         ]);
 
         $emailOnly->assertCreated()
@@ -491,6 +514,9 @@ class BmpTest extends TestCase
             'phone' => '0651463220',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'latitude' => 34.0209,
+            'longitude' => -6.8416,
+            'address' => 'Rabat Phone Shop',
         ]);
 
         $phoneOnly->assertCreated()
@@ -526,6 +552,9 @@ class BmpTest extends TestCase
             'phone' => '+212612345699',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'latitude' => 35.7595,
+            'longitude' => -5.8340,
+            'address' => 'Tangier Shop',
         ]);
 
         $both->assertCreated()

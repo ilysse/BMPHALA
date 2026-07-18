@@ -320,6 +320,10 @@ class AuthProvider with ChangeNotifier {
       if (shopName.isEmpty ||
           (email.trim().isEmpty && phone.trim().isEmpty) ||
           (phone.trim().isNotEmpty && phone.trim().length < 8) ||
+          address == null ||
+          address.trim().isEmpty ||
+          latitude == null ||
+          longitude == null ||
           password.length < 8) {
         throw Exception('Please fill in all fields correctly.');
       }

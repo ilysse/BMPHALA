@@ -12,6 +12,7 @@ class LocationPickerFields extends StatelessWidget {
   final TextEditingController latitudeController;
   final TextEditingController longitudeController;
   final String addressLabel;
+  final bool required;
 
   const LocationPickerFields({
     super.key,
@@ -19,6 +20,7 @@ class LocationPickerFields extends StatelessWidget {
     required this.latitudeController,
     required this.longitudeController,
     this.addressLabel = 'Address',
+    this.required = false,
   });
 
   @override
@@ -37,9 +39,12 @@ class LocationPickerFields extends StatelessWidget {
               color: AppColors.primary,
             ),
           ),
-          validator: (value) => value != null && value.length > 500
-              ? context.tr('address_under_500')
-              : null,
+          validator: (value) {
+            final text = value?.trim() ?? '';
+            if (required && text.isEmpty) return context.tr('required');
+            if (text.length > 500) return context.tr('address_under_500');
+            return null;
+          },
         ),
         const SizedBox(height: 12),
         Row(
@@ -94,7 +99,7 @@ class LocationPickerFields extends StatelessWidget {
   String? _validateLatitude(BuildContext context, String? value) {
     final text = value?.trim() ?? '';
     final longitude = longitudeController.text.trim();
-    if (text.isEmpty && longitude.isEmpty) return null;
+    if (text.isEmpty && longitude.isEmpty && !required) return null;
     if (text.isEmpty) return context.tr('required');
     final latitude = double.tryParse(text);
     if (!_isValidLatitude(latitude)) {
@@ -106,7 +111,7 @@ class LocationPickerFields extends StatelessWidget {
   String? _validateLongitude(BuildContext context, String? value) {
     final text = value?.trim() ?? '';
     final latitude = latitudeController.text.trim();
-    if (text.isEmpty && latitude.isEmpty) return null;
+    if (text.isEmpty && latitude.isEmpty && !required) return null;
     if (text.isEmpty) return context.tr('required');
     final longitude = double.tryParse(text);
     if (!_isValidLongitude(longitude)) {

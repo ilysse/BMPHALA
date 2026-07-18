@@ -543,6 +543,7 @@ class _AdminOnboardRetailerTabState extends State<_AdminOnboardRetailerTab> {
                           latitudeController: _latitudeController,
                           longitudeController: _longitudeController,
                           addressLabel: 'Retailer Address',
+                          required: true,
                         ),
                         const SizedBox(height: 24),
                         auth.isLoading

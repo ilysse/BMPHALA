@@ -1,6 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/config/map_config.dart';
 import '../../core/constants/colors.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/network/api_service.dart';
@@ -201,6 +205,18 @@ class _AdminRegistrationsViewState extends State<AdminRegistrationsView> {
     }
   }
 
+  void _showLocation(_PendingRegistration registration) {
+    if (!registration.hasLocation) {
+      _showMessage(context.tr('location_not_provided'), AppColors.error);
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (_) => _RegistrationLocationDialog(registration: registration),
+    );
+  }
+
   void _showMessage(String message, Color color) {
     ScaffoldMessenger.of(
       context,
@@ -260,7 +276,7 @@ class _AdminRegistrationsViewState extends State<AdminRegistrationsView> {
                         crossAxisCount: columns,
                         crossAxisSpacing: 14,
                         mainAxisSpacing: 14,
-                        mainAxisExtent: 300,
+                        mainAxisExtent: 390,
                       ),
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final registration = registrations[index];
@@ -269,6 +285,7 @@ class _AdminRegistrationsViewState extends State<AdminRegistrationsView> {
                           action: _processing[registration.id],
                           onApprove: () => _approve(registration),
                           onReject: () => _reject(registration),
+                          onViewLocation: () => _showLocation(registration),
                         );
                       }, childCount: registrations.length),
                     );
@@ -384,12 +401,14 @@ class _RegistrationCard extends StatelessWidget {
   final String? action;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final VoidCallback onViewLocation;
 
   const _RegistrationCard({
     required this.registration,
     required this.action,
     required this.onApprove,
     required this.onReject,
+    required this.onViewLocation,
   });
 
   @override
@@ -470,17 +489,17 @@ class _RegistrationCard extends StatelessWidget {
             label: context.tr('phone'),
             value: registration.phone ?? '-',
           ),
-          _DetailLine(
-            icon: Icons.location_on_outlined,
-            label: context.tr('address'),
-            value: registration.address ?? '-',
-          ),
           if (registration.referredBy != null)
             _DetailLine(
               icon: Icons.hub_outlined,
               label: context.tr('referred_by'),
               value: registration.referredBy!,
             ),
+          const SizedBox(height: 2),
+          _LocationReviewPanel(
+            registration: registration,
+            onViewLocation: onViewLocation,
+          ),
           const Spacer(),
           Row(
             children: [
@@ -510,6 +529,234 @@ class _RegistrationCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LocationReviewPanel extends StatelessWidget {
+  final _PendingRegistration registration;
+  final VoidCallback onViewLocation;
+
+  const _LocationReviewPanel({
+    required this.registration,
+    required this.onViewLocation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLocation = registration.hasLocation;
+    final color = hasLocation ? AppColors.primary : AppColors.error;
+
+    return Container(
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.24)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            hasLocation
+                ? Icons.location_on_rounded
+                : Icons.wrong_location_rounded,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasLocation
+                      ? registration.address ?? context.tr('seller_location')
+                      : context.tr('location_not_provided'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: hasLocation ? AppColors.textPrimary : color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasLocation
+                      ? registration.formattedCoordinates
+                      : context.tr('location_missing_review_warning'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (hasLocation)
+            TextButton.icon(
+              onPressed: onViewLocation,
+              icon: const Icon(Icons.map_rounded, size: 18),
+              label: Text(context.tr('view_on_map')),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RegistrationLocationDialog extends StatelessWidget {
+  final _PendingRegistration registration;
+
+  const _RegistrationLocationDialog({required this.registration});
+
+  Future<void> _openGoogleMaps(BuildContext context) async {
+    final uri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': registration.formattedCoordinates,
+    });
+
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {
+      // Show a localized error below if the browser cannot open the map URL.
+    }
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.tr('map_open_failed')),
+        backgroundColor: AppColors.error,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final point = LatLng(registration.latitude!, registration.longitude!);
+    final width = MediaQuery.sizeOf(context).width.clamp(320.0, 760.0);
+    final height = MediaQuery.sizeOf(context).height.clamp(500.0, 720.0);
+
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 10, 10),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.store_mall_directory_rounded,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('seller_location'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Text(
+                          registration.name,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: context.tr('close'),
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: point,
+                  initialZoom: 15,
+                  minZoom: 3,
+                  maxZoom: 18,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: MapConfig.tileUrlTemplate,
+                    userAgentPackageName: MapConfig.userAgentPackageName,
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        width: 52,
+                        height: 52,
+                        point: point,
+                        alignment: Alignment.topCenter,
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          color: AppColors.error,
+                          size: 50,
+                          shadows: [
+                            Shadow(color: Colors.white, blurRadius: 7),
+                            Shadow(color: Colors.black26, blurRadius: 9),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const RichAttributionWidget(
+                    attributions: [
+                      TextSourceAttribution(MapConfig.attribution),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          registration.address ?? context.tr('missing'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          registration.formattedCoordinates,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton.icon(
+                    onPressed: () => _openGoogleMaps(context),
+                    icon: const Icon(Icons.open_in_new_rounded),
+                    label: Text(context.tr('open_google_maps')),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -658,6 +905,8 @@ class _PendingRegistration {
   final String? email;
   final String? phone;
   final String? address;
+  final double? latitude;
+  final double? longitude;
   final String? referredBy;
   final DateTime? createdAt;
 
@@ -667,6 +916,8 @@ class _PendingRegistration {
     this.email,
     this.phone,
     this.address,
+    this.latitude,
+    this.longitude,
     this.referredBy,
     this.createdAt,
   });
@@ -677,15 +928,40 @@ class _PendingRegistration {
       return text == null || text.isEmpty ? null : text;
     }
 
+    double? coordinate(dynamic value) {
+      if (value is num) return value.toDouble();
+      return double.tryParse(value?.toString() ?? '');
+    }
+
     return _PendingRegistration(
       id: json['id'].toString(),
       name: json['name']?.toString() ?? '',
       email: optional(json['email']),
       phone: optional(json['phone']),
       address: optional(json['address']),
+      latitude: coordinate(json['latitude']),
+      longitude: coordinate(json['longitude']),
       referredBy: optional(json['referred_by']),
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
     );
+  }
+
+  bool get hasLocation {
+    final lat = latitude;
+    final lng = longitude;
+    return lat != null &&
+        lng != null &&
+        lat.isFinite &&
+        lng.isFinite &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180;
+  }
+
+  String get formattedCoordinates {
+    if (!hasLocation) return '-';
+    return '${latitude!.toStringAsFixed(6)}, ${longitude!.toStringAsFixed(6)}';
   }
 
   String get formattedDate {
