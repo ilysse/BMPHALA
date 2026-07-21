@@ -1,0 +1,48 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!.env.alwaysdata.example
+DEPLOY_TOKENS.txt
+.deploy_backend_ftps/
+
+# Databases and local state
+*.sqlite
+*.sqlite3
+database.sqlite
+backend/database/database.sqlite
+backend/storage/app/firebase-service-account.json
+
+# Dependencies
+backend/vendor/
+frontend/.dart_tool/
+frontend/build/
+node_modules/
+vendor/
+
+# Laravel runtime
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+backend/.phpunit.result.cache
+
+# Flutter/editor generated
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/flutter_*.log
+*.iml
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local build and deployment artifacts
+/.tmp/
+/*.apk
+/*.aab
+/bmp-backend-*.zip
+/halawat-frontend-web-*.zip
